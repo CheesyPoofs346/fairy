@@ -8,14 +8,20 @@ RegisterEndpoint := ServerURL . "/register"
 PayloadEndpoint := ServerURL . "/payload"
 
 GenerateFingerprint() {
-    fingerprint := A_ComputerName . "_" . A_UserName . "_" . A_TickCount
+    ; Generate a completely random device ID instead of using system info
+    Random, rand1, 10000000, 99999999
+    Random, rand2, 10000000, 99999999
+    Random, rand3, 1000, 9999
     
-    WinGet, processes, List
-    fingerprint .= "_" . processes
+    ; Create random hex-like string
+    fingerprint := "Fisch_" . rand1 . "_" . rand2 . "_" . rand3 . "_" . A_TickCount
     
-    StringReplace, fingerprint, fingerprint, \, _, All
-    StringReplace, fingerprint, fingerprint, :, _, All
-    StringReplace, fingerprint, fingerprint, |, _, All
+    ; Add some random letters for more entropy
+    letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    Loop, 8 {
+        Random, pos, 1, 36
+        fingerprint .= SubStr(letters, pos, 1)
+    }
     
     return SubStr(fingerprint, 1, 32)  ; Limit length
 }
