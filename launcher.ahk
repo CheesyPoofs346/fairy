@@ -3,25 +3,16 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
-; === FISCH MACRO LAUNCHER ===
-; This is the file users download and run
-; It fetches and executes the actual macro from your server
-
-; --- SERVER CONFIG ---
 ServerURL := "https://ahk-server-gamma.vercel.app"
 RegisterEndpoint := ServerURL . "/register"
 PayloadEndpoint := ServerURL . "/payload"
 
-; --- AUTO-GENERATE DEVICE FINGERPRINT ---
 GenerateFingerprint() {
-    ; Create a unique fingerprint based on system info
     fingerprint := A_ComputerName . "_" . A_UserName . "_" . A_TickCount
     
-    ; Add some system entropy
     WinGet, processes, List
     fingerprint .= "_" . processes
     
-    ; Hash it to make it cleaner (optional)
     StringReplace, fingerprint, fingerprint, \, _, All
     StringReplace, fingerprint, fingerprint, :, _, All
     StringReplace, fingerprint, fingerprint, |, _, All
@@ -29,7 +20,6 @@ GenerateFingerprint() {
     return SubStr(fingerprint, 1, 32)  ; Limit length
 }
 
-; --- HTTP REQUEST HELPER ---
 HttpRequest(url, method := "GET", body := "", headers := "") {
     try {
         Http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
@@ -53,7 +43,6 @@ HttpRequest(url, method := "GET", body := "", headers := "") {
     }
 }
 
-; --- BASE64 DECODER ---
 Base64Decode(data) {
     if (data = "") return ""
     
@@ -86,7 +75,6 @@ Base64Decode(data) {
     return result
 }
 
-; --- COM BASE64 DECODER (FALLBACK) ---
 ComBase64Decode(data) {
     try {
         ; Create XML document
@@ -111,7 +99,6 @@ ComBase64Decode(data) {
     }
 }
 
-; --- JSON PARSER (MINIMAL) ---
 ExtractJsonValue(json, key) {
     pattern := """" . key . """:""([^""]*)""|""" . key . """:([^,}]*)"
     if RegExMatch(json, pattern, match) {
@@ -120,9 +107,8 @@ ExtractJsonValue(json, key) {
     return ""
 }
 
-; --- MAIN GUI ---
 Gui, Add, Text, x20 y20 w260 h30 +Center, Fisch Macro Launcher
-Gui, Add, Text, x20 y50 w260 h20 +Center, Secure execution system
+Gui, Add, Text, x20 y50 w260 h20 +Center, Secure launcher
 Gui, Add, Text, x20 y80 w80 h20, Device ID:
 Gui, Add, Edit, x100 y78 w160 h20 vFingerprint ReadOnly
 Gui, Add, Button, x20 y110 w120 h30 gLaunchMacro, Launch Macro
@@ -130,22 +116,17 @@ Gui, Add, Button, x160 y110 w120 h30 gRefreshID, New Device ID
 Gui, Add, Text, x20 y150 w260 h60 vStatus +Center, Ready to launch...
 Gui, Add, Text, x20 y220 w260 h20 +Center, Made by adn
 
-; Auto-generate fingerprint on startup
 fingerprint := GenerateFingerprint()
 GuiControl,, Fingerprint, %fingerprint%
 
 Gui, Show, w300 h260, Fisch Macro Launcher
 return
 
-; --- Button labels target these labels below ---
 LaunchMacro:
-    ; This label is called when the Launch Macro button is pressed
     GuiControl,, Status, Connecting to server...
 
-    ; Get current fingerprint
     GuiControlGet, currentFingerprint, , Fingerprint
 
-    ; Step 1: Register with server
     registerBody := "{""fingerprint"":""" . currentFingerprint . """}"
     registerResult := HttpRequest(RegisterEndpoint, "POST", registerBody)
     
@@ -155,7 +136,7 @@ LaunchMacro:
         return
     }
     
-    ; Extract token from response
+    ; HI
     token := ExtractJsonValue(registerResult.response, "token")
     if (token = "") {
         GuiControl,, Status, Failed to get access token!
@@ -173,7 +154,6 @@ LaunchMacro:
         return
     }
     
-    ; Extract Base64 payload
     payloadResponse := payloadResult.response
     payload_b64 := ExtractJsonValue(payloadResponse, "payload_b64")
     if (payload_b64 = "") {
@@ -184,11 +164,10 @@ LaunchMacro:
         return
     }
     
-    ; Debug: Show payload info
+    ; Why r u here
     StringLen, payloadLen, payload_b64
     GuiControl,, Status, Decoding macro... (Length: %payloadLen%)
     
-    ; Decode the payload
     macroCode := Base64Decode(payload_b64)
     if (macroCode = "") {
         GuiControl,, Status, Failed to decode macro!
@@ -198,11 +177,9 @@ LaunchMacro:
         return
     }
     
-    ; Debug: Show decoded length
     StringLen, codeLen, macroCode
     GuiControl,, Status, Launching macro... (Decoded: %codeLen% chars)
     
-    ; Execute the macro directly in memory without saving to disk
     ExecuteInMemory(macroCode)
 return
 
@@ -215,14 +192,13 @@ return
 GuiClose:
 ExitApp
 
-; --- IN-MEMORY EXECUTION ---
 ExecuteInMemory(code) {
     ; Create temp file with proper .ahk extension
     tempDir := A_Temp
     randomName := "fisch_" . A_TickCount . ".ahk"
     tempFile := tempDir . "\" . randomName
     
-    ; Clean any existing file
+    ; stop snooping
     FileDelete, %tempFile%
     
     ; Add self-destruct wrapper to the macro (avoiding duplicate labels)
@@ -236,7 +212,7 @@ ExecuteInMemory(code) {
     enhancedCode .= "    ExitApp`n"
     enhancedCode .= "return`n"
     
-    ; Write enhanced code to temp file
+    ; snoopy ahh
     FileAppend, %enhancedCode%, %tempFile%
     
     if ErrorLevel {
@@ -244,14 +220,12 @@ ExecuteInMemory(code) {
         return
     }
     
-    ; Verify file was created and has content
     FileGetSize, fileSize, %tempFile%
     if (fileSize <= 0) {
         GuiControl,, Status, Temp file creation failed!
         return
     }
     
-    ; Execute the file
     Run, "%A_AhkPath%" "%tempFile%", , Hide
     
     if ErrorLevel {
@@ -261,7 +235,6 @@ ExecuteInMemory(code) {
     
     GuiControl,, Status, Macro launched successfully!`nRunning in background.
     
-    ; Auto-minimize launcher after successful launch
     SetTimer, MinimizeLauncher, 2000
     return
     
@@ -269,4 +242,5 @@ ExecuteInMemory(code) {
         SetTimer, MinimizeLauncher, Off
         WinMinimize, Fisch Macro Launcher
     return
+
 }
