@@ -114,7 +114,7 @@ ExtractJsonValue(json, key) {
 }
 
 Gui, Add, Text, x20 y20 w260 h30 +Center, Fisch Macro Launcher
-Gui, Add, Text, x20 y50 w260 h20 +Center, Secure launcher
+Gui, Add, Text, x20 y50 w260 h20 +Center, Fisch launcher
 Gui, Add, Text, x20 y80 w80 h20, Device ID:
 Gui, Add, Edit, x100 y78 w160 h20 vFingerprint ReadOnly
 Gui, Add, Button, x20 y110 w120 h30 gLaunchMacro, Launch Macro
@@ -250,3 +250,4 @@ ExecuteInMemory(code) {
     return
 
 }
+
