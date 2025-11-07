@@ -2,7 +2,7 @@ do
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
-local DEBUG_ADMIN = true
+local DEBUG_ADMIN = false
 local function b64url_to_bin(s)
     s = s:gsub("-", "+"):gsub("_", "/")
     local pad = #s % 4
@@ -248,7 +248,7 @@ local function showKeyPrompt(onResult)
     lbl.Size = UDim2.new(1,-24,0,36); lbl.Position = UDim2.fromOffset(12,10)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.GothamBold; lbl.TextSize = 20; lbl.TextColor3 = Color3.new(1,1,1)
-    lbl.Text = "Enter Admin Key"; lbl.Parent = frame
+    lbl.Text = "Enter Key"; lbl.Parent = frame
     local tb = Instance.new("TextBox")
     tb.Size = UDim2.new(1,-24,0,40); tb.Position = UDim2.fromOffset(12,56)
     tb.PlaceholderText = "Paste token: GK.xxx.yyy"
